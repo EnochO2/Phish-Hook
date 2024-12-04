@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Upload Email</title>
+  <link rel="stylesheet" href="../static/style.css">
+  <script src="../static/script.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Upload an Email to Scan</h1>
+    <form method="post" enctype="multipart/form-data">
+      <input type="file" name="file" id="file-input" accept=".txt,.pdf,.docx,.html,.htm,.eml,.doc" required>
+      <input type="submit" value="Upload">
+    </form>
+    
+    <!-- Ensure this container exists -->
+    <div id="email-analysis-container"></div>
+  </div>
+</body>
+</html>

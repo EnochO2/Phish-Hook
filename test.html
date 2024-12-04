@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Test Page</title>
+  <style>
+    .container { margin: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Test Analysis Container</h1>
+    <div id="email-analysis-container"></div>
+  </div>
+  <script>
+    console.log("Starting inline script");
+
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log("DOMContentLoaded event fired - Script starting");
+
+      const container = document.getElementById('email-analysis-container');
+      if (container) {
+        console.log("Container found: ", container);
+        container.innerHTML = ''; // Clear any previous analysis
+
+        const analysisContainer = document.createElement('div');
+        analysisContainer.textContent = "Analysis will be displayed here.";
+        container.appendChild(analysisContainer);
+      } else {
+        console.error("Element with ID 'email-analysis-container' not found.");
+      }
+
+      console.log("DOMContentLoaded event handler finished");
+    });
+
+    console.log("Inline script executed");
+  </script>
+</body>
+</html>

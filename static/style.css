@@ -1,0 +1,26 @@
+/* style.css */
+/* Placeholder for future styles */
+
+body {
+  font-family: Arial, sans-serif;
+}
+
+.container {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+  font-size: 24px;
+  color: #333;
+}
+
+input[type="file"], input[type="submit"] {
+  display: block;
+  margin: 20px 0;
+}
