@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Phish-Hook: AI-Powered Phishing Detection Tool
 ## Overview
 
@@ -145,3 +146,6 @@ console.log("content.js script executed");
 - **Wednesday**: Complete the AI model integration and enhance the UI/UX.
 - **Thursday**: Conduct comprehensive testing and address any issues or bugs found.
 - **Friday**: Finalize documentation and prepare the project for submission by 4 PM.
+=======
+# Phish-Hook
+>>>>>>> c3de19d019f826f1010a77cb944d74ae3dafe75b
