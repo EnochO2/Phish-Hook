@@ -1,21 +1,29 @@
 console.log("background.js loaded");
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log("Message received:", request.action);
   if (request.action === "scan") {
-    console.log("Scanning email content:", request.content);
     let riskAssessmentResult = assessRisk(request.content);
     sendResponse({ result: riskAssessmentResult });
   }
 });
 
 function assessRisk(content) {
-  let riskWords = ["urgent", "immediate action", "click here"];
+  let riskWords = ["urgent", "immediate action", "click here", "account", "password"];
   let riskScore = 0;
+  let foundRiskWords = [];
+
   riskWords.forEach(word => {
     if (content.includes(word)) {
       riskScore++;
+      foundRiskWords.push(word);
     }
   });
-  return riskScore > 1 ? "high" : "low";
+
+  let result = {
+    classification: riskScore > 2 ? "Phishing" : "Non-Phishing",
+    score: riskScore,
+    analysis: `The content contains ${riskScore} risk words: ${foundRiskWords.join(", ")}.`
+  };
+
+  return result;
 }
