@@ -1,13 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Popup</title>
+    <meta charset="UTF-8">
+    <title>Phishing Detector Setup</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        #saveKey { margin-top: 10px; }
+    </style>
 </head>
 <body>
-  <div id="content">
-    <!-- Your content here -->
-  </div>
-  <script src="popup.js"></script>
+    <div>
+        <label for="apiKey">Enter your OpenAI API Key:</label>
+        <input type="text" id="apiKey" placeholder="API Key" />
+        <button id="saveKey">Save Key</button>
+    </div>
+    <script src="popup.js"></script>
 </body>
 </html>

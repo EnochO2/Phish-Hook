@@ -1,82 +1,100 @@
-console.log("Starting content.js");
+console.log("Starting content script.");
 
+// Function to get the email subject
 function getEmailSubject() {
-  let subjectElement = document.querySelector('h2.hP');
-  if (subjectElement) {
-    console.log("Email subject found:", subjectElement.innerText.trim());
-    return subjectElement.innerText.trim();
-  } else {
-    console.warn("Email subject not found.");
-    return 'Unknown Subject';
-  }
+    const subjectElement = document.querySelector('h2.hP') || document.querySelector('.some-other-class');
+    if (subjectElement) {
+        console.log("Email subject found:", subjectElement.innerText.trim());
+        return subjectElement.innerText.trim();
+    } else {
+        console.warn("Email subject not found.");
+        return null;
+    }
 }
 
+// Function to get the email body
 function getEmailBody() {
-  let bodyElement = document.querySelectorAll('div[role="textbox"], div[role="listitem"]');
-  let bodyContent = '';
-  bodyElement.forEach((element) => {
-    bodyContent += element.innerText.trim() + ' ';
-  });
-  console.log("Email body content found:", bodyContent.trim());
-  return bodyContent.trim();
+    const bodyElements = document.querySelectorAll('div[role="textbox"], div[role="listitem"]');
+    let bodyContent = '';
+    bodyElements.forEach(element => {
+        bodyContent += element.innerText.trim() + ' ';
+    });
+
+    if (bodyContent.trim().length === 0) {
+        console.warn("Email body content is empty.");
+        return null;
+    } else {
+        console.log("Email body content found:", bodyContent.trim());
+        return bodyContent.trim();
+    }
 }
 
-const observer = new MutationObserver((mutationsList, observer) => {
-  console.log("Mutation observed.");
-  let emailSubject = getEmailSubject();
-  let emailBody = getEmailBody();
-  if (emailSubject !== 'Unknown Subject' && emailBody !== '') {
-    observer.disconnect(); // Disconnect observer after first detection
-    console.log("Observer disconnected.");
-    analyzeEmailContent(emailSubject, emailBody);
-  }
+// Analyze content when both subject and body are available
+function analyzeIfReady() {
+    const emailSubject = getEmailSubject();
+    const emailBody = getEmailBody();
+
+    if (emailSubject && emailBody) {
+        observer.disconnect();
+        console.log("Observer disconnected.");
+        analyzeContent(emailSubject, emailBody);
+    } else {
+        console.log("Waiting for full content to load.");
+    }
+}
+
+// MutationObserver to monitor changes in the DOM
+const observer = new MutationObserver(() => {
+    console.log("Mutation observed.");
+    analyzeIfReady();
 });
 
+// Start observing the DOM for changes
 const config = { childList: true, subtree: true };
 observer.observe(document.body, config);
-console.log("MutationObserver started.");
+console.log("MutationObserver started with configuration:", config);
 
-function analyzeEmailContent(subject, body) {
-  let content = subject + ' ' + body;
-  chrome.runtime.sendMessage({ action: "scan", content: content, subject: subject }, (response) => {
-    if (response && response.result) {
-      console.log(`Risk assessment result for subject [${subject}]: ${response.result.classification}`);
-      displayResult(subject, response.result, content);
+// Function to send email content for analysis
+function analyzeContent(subject, body) {
+    console.log(`Analyzing content with subject: ${subject}`);
+    const content = `${subject} ${body}`;
+
+    chrome.runtime.sendMessage({ action: "analyzeWithGpt", content }, (response) => {
+        if (response.error) {
+            console.error('Analysis error:', response.error);
+            displayAlert(response.error);
+        } else {
+            const classification = response.risk === 'high' ? "Phishing" : "Non-Phishing";
+            displayResult(subject, classification);
+        }
+    });
+}
+
+// Function to display the analysis result in the UI
+function displayResult(subject, risk) {
+    let analysisContainer = document.createElement('div');
+    analysisContainer.style.border = "2px solid #FF0000";
+    analysisContainer.style.padding = "10px";
+    analysisContainer.style.margin = "10px";
+    analysisContainer.style.backgroundColor = risk === 'Phishing' ? "#FFDDDD" : "#DDFFDD";
+
+    analysisContainer.textContent = `Detected Subject: ${subject}\nClassification: ${risk}`;
+
+    const targetNode = document.querySelector('div[role="main"]');
+    if (targetNode) {
+        targetNode.prepend(analysisContainer);
+        console.log("Analysis container prepended to the main container.");
     } else {
-      console.error("Error in risk assessment response.");
+        document.body.prepend(analysisContainer);
+        console.log("Analysis container prepended to the body.");
     }
-  });
+
+    if (risk === 'Phishing') {
+        alert("Warning: This email has been classified as Phishing!");
+    }
 }
 
-function displayResult(subject, result, content) {
-  console.log("Displaying result in the Gmail interface.");
-  let analysisContainer = document.createElement('div');
-  analysisContainer.style.border = "2px solid #FF0000";
-  analysisContainer.style.padding = "10px";
-  analysisContainer.style.margin = "10px";
-  analysisContainer.style.backgroundColor = result.classification === "Phishing" ? "#FFDDDD" : "#DDFFDD";
-
-  // Create a concise summary of relevant risk words
-  let riskWords = result.analysis.match(/(account|password|urgent|immediate action|click here|risk)/ig);
-  let analysisSummary = riskWords ? Array.from(new Set(riskWords)).join(', ') : 'None';
-
-  analysisContainer.textContent = `Detected Subject: ${subject}\nClassification: ${result.classification}\nTotal Score: ${result.score}\n\nRisk Words: ${analysisSummary}`;
-
-  let targetNode = document.querySelector('div[role="main"]');
-  if (targetNode) {
-    targetNode.appendChild(analysisContainer);
-    console.log("Analysis container appended to the main container.");
-  } else {
-    document.body.appendChild(analysisContainer);
-    console.log("Analysis container appended to the body.");
-  }
-
-  if (result.classification === "Phishing") {
-    triggerAlert(result);
-  }
-}
-
-function triggerAlert(result) {
-  console.log("Triggering alert for phishing email.");
-  alert(`Warning: This email has been classified as Phishing!\n\nTotal Score: ${result.score}\nRisk Words: ${result.analysis.match(/(account|password|urgent|immediate action|click here|risk)/ig).join(', ')}`);
+// Function to notify the user if there's an error
+function displayAlert(message) {
+    alert("Error: " + message);
 }

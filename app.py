@@ -1,28 +1,58 @@
 from flask import Flask, request, jsonify
-import pickle
+from flask_cors import CORS
+import openai
+import os
+import logging
 
 app = Flask(__name__)
 
-try:
-    with open('model2.0.pkl', 'rb') as model_file:
-        model = pickle.load(model_file)
-    with open('vectorizer2.0.pkl', 'rb') as vectorizer_file:
-        vectorizer = pickle.load(vectorizer_file)
-    print("Model and vectorizer loaded successfully")
-except Exception as e:
-    print(f"Error loading model or vectorizer: {e}")
+# Ensure the CORS setup allows the required methods and headers
+CORS(app, resources={r"/analyze": {"origins": "chrome-extension://<extension-id>"}}, supports_credentials=True)
 
-@app.route('/scan', methods=['POST'])
-def scan_email():
-    content = request.json.get('content')
-    if content:
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
+logging.basicConfig(level=logging.DEBUG)
+
+@app.route('/analyze', methods=['POST', 'OPTIONS'])
+def analyze_email():
+    if request.method == 'OPTIONS':
+        logging.debug("CORS preflight request received.")
+        response = jsonify({'status': 'CORS preflight passed'})
+        response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        return response, 200
+
+    try:
+        content = request.json.get('emailContent')
+        if not content:
+            logging.error("No email content provided")
+            return jsonify({'error': 'No email content provided'}), 400
+
+        logging.debug(f"Email content received for analysis: {content}")
+
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "You are a skilled assistant in identifying phishing emails."},
+                {"role": "user", "content": f"Analyze this email for phishing signs: {content}"}
+            ]
+        )
+
+        logging.debug(f"OpenAI API Response: {response}")
+
         try:
-            features = vectorizer.transform([content])
-            prediction = model.predict(features)
-            return jsonify({'risk': 'high' if prediction[0] == 1 else 'low'})
-        except Exception as e:
-            return jsonify({'error': f'Error processing the email content: {e}'}), 500
-    return jsonify({'error': 'No content provided'}), 400
+            gpt_response = response['choices'][0]['message']['content']
+            is_phishing = "phishing" in gpt_response.lower()
+            logging.info(f"Email analysis result: {'Phishing' if is_phishing else 'Non-Phishing'}")
+            return jsonify({'risk': 'high' if is_phishing else 'low'})
+
+        except (IndexError, KeyError) as e:
+            logging.error("Unexpected response from OpenAI:", response)
+            return jsonify({'error': 'Unexpected response structure'}), 500
+
+    except Exception as e:
+        logging.exception("Error processing request")
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000)  # Listen on all network interfaces

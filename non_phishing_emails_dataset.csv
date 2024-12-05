@@ -1,0 +1,549 @@
+import pandas as pd
+
+# List of email dictionaries
+emails = [
+    {
+        "subject": "Meeting Rescheduled to Tomorrow",
+        "body": """
+        <html>
+        <head><title>Meeting Rescheduled</title></head>
+        <body>
+            <p>Hi team,</p>
+            <p>Just a quick note to let you know that our meeting scheduled for today has been rescheduled to tomorrow at 10:00 AM. Please update your calendars accordingly.</p>
+            <p>Looking forward to seeing you all then.</p>
+            <p>Best regards,<br>John</p>
+        </body>
+        </html>
+        """,
+        "label": 0
+    },
+    {
+        "subject": "Unacceptable Delay in Response",
+        "body": """
+        <html>
+        <head><title>Unacceptable Delay in Response</title></head>
+        <body>
+            <p>Dear Support Team,</p>
+            <p>I am extremely frustrated with the lack of response to my previous emails. This delay is unacceptable and has caused significant inconvenience. Please address this issue immediately.</p>
+            <p>Sincerely,<br>Unhappy Customer</p>
+        </body>
+        </html>
+        """,
+        "label": 0
+    },
+    
+    {
+        "subject": "Update on Project Timeline",
+        "body": """
+        <html>
+        <head><title>Update on Project Timeline</title></head>
+        <body>
+            <p>Hi team,</p>
+            <p>I wanted to provide a quick update on our project timeline. We are on track to complete the first phase by next Friday.</p>
+            <p>Best regards,<br>Emily</p>
+        </body>
+        </html>
+        """,
+        "label": 0
+    },
+    {
+        "subject": "Quarterly Performance Review",
+        "body": """
+        <html>
+        <head><title>Quarterly Performance Review</title></head>
+        <body>
+            <p>Dear Team,</p>
+            <p>It's time for our quarterly performance review. Please prepare your reports and be ready to discuss them in our meeting on Monday.</p>
+            <p>Thanks,<br>Michael</p>
+        </body>
+        </html>
+        """,
+        "label": 0
+    },
+    {
+        "subject": "Invitation to Networking Event",
+        "body": """
+        <html>
+        <head><title>Networking Event Invitation</title></head>
+        <body>
+            <p>Hi all,</p>
+            <p>We are hosting a networking event next week and would love to see you there. It's a great opportunity to connect with industry peers.</p>
+            <p>Cheers,<br>David</p>
+        </body>
+        </html>
+        """,
+        "label": 0
+    },
+    {
+        "subject": "Happy Holidays!",
+        "body": """
+        <html>
+        <head><title>Holiday Greetings</title></head>
+        <body>
+            <p>Dear colleagues,</p>
+            <p>Wishing you all a wonderful holiday season filled with joy and relaxation. Enjoy your time with family and friends.</p>
+            <p>Best,<br>Sarah</p>
+        </body>
+        </html>
+        """,
+        "label": 0
+    },
+    {
+        "subject": "Annual Charity Event",
+        "body": """
+        <html>
+        <head><title>Charity Event</title></head>
+        <body>
+            <p>Hello everyone,</p>
+            <p>We are excited to announce our annual charity event. Your participation is greatly appreciated to make it a success.</p>
+            <p>Kind regards,<br>Rachel</p>
+        </body>
+        </html>
+        """,
+        "label": 0
+    },
+    {
+        "subject": "Reminder: Team Lunch Tomorrow",
+        "body": """
+        <html>
+        <head><title>Team Lunch Reminder</title></head>
+        <body>
+            <p>Hi team,</p>
+            <p>Just a friendly reminder about our team lunch tomorrow at 12 PM. Please RSVP if you haven't already.</p>
+            <p>Best,<br>Chris</p>
+        </body>
+        </html>
+        """,
+        "label": 0
+    },
+    {
+        "subject": "Software Update Scheduled",
+        "body": """
+        <html>
+        <head><title>Software Update Scheduled</title></head>
+        <body>
+            <p>Hi team,</p>
+            <p>We have scheduled a software update for this weekend. Please ensure you have saved all your work to avoid any data loss.</p>
+            <p>Best regards,<br>Alex</p>
+        </body>
+        </html>
+        """,
+        "label": 0
+    },
+    {
+        "subject": "Client Meeting Follow-Up",
+        "body": """
+        <html>
+        <head><title>Client Meeting Follow-Up</title></head>
+        <body>
+            <p>Hi all,</p>
+            <p>Just a quick follow-up from our client meeting earlier today. Please send me your notes and action items by the end of the day.</p>
+            <p>Thanks,<br>Lisa</p>
+        </body>
+        </html>
+        """,
+        "label": 0
+    },
+    {
+        "subject": "Welcome New Team Member",
+        "body": """
+        <html>
+        <head><title>Welcome New Team Member</title></head>
+        <body>
+            <p>Dear team,</p>
+            <p>Please join me in welcoming our new team member, Jessica. We are excited to have her on board and look forward to working with her.</p>
+            <p>Best,<br>Mark</p>
+        </body>
+        </html>
+        """,
+        "label": 0
+    },
+    {
+        "subject": "Deadline Reminder",
+        "body: """
+        <html>
+        <head><title>Deadline Reminder</title></head>
+        <body>
+            <p>Hi everyone,</p>
+            <p>This is a reminder that the deadline for submitting your reports is this Friday. Please ensure everything is completed on time.</p>
+            <p>Thanks,<br>Jason</p>
+        </body>
+        </html>
+        """,
+        "label": 0
+    },
+    {
+        "subject": "Missing Attachment in Your Last Email",
+        "body": """
+        <html>
+        <head><title>Missing Attachment</title></head>
+        <body>
+            <p>Hi,</p>
+            <p>This is the third time I am requesting the attachment that was supposed to be included in your last email. Please send it over as soon as possible.</p>
+            <p>Thank you,<br>Annoyed Recipient</p>
+        </body>
+        </html>
+        """,
+        "label": 0
+    },
+    {
+        "subject": "Re: Incorrect Billing Amount",
+        "body": """
+        <html>
+        <head><title>Incorrect Billing Amount</title></head>
+        <body>
+            <p>Dear Billing Department,</p>
+            <p>I have noticed a discrepancy in my latest bill. The amount charged is incorrect, and I demand an immediate correction. This is very disappointing.</p>
+            <p>Regards,<br>Concerned Customer</p>
+        </body>
+        </html>
+        """,
+        "label": 0
+    },
+    {
+        "subject": "Why Was My Order Canceled?",
+        "body": """
+        <html>
+        <head><title>Order Cancellation</title></head>
+        <body>
+            <p>Dear Customer Service,</p>
+            <p>I just received a notification that my order was canceled without any explanation. This is unacceptable, and I need an answer right away.</p>
+            <p>Regards,<br>Upset Shopper</p>
+        </body>
+        </html>
+        """,
+        "label": 0
+    },
+    {
+        "subject": "Urgent: Account Access Issue",
+        "body": """
+        <html>
+        <head><title>Account Access Issue</title></head>
+        <body>
+            <p>Dear IT Support,</p>
+            <p>I am unable to access my account despite multiple attempts. This needs to be resolved immediately as it is hindering my work.</p>
+            <p>Thank you,<br>Frustrated User</p>
+        </body>
+        </html>
+        """,
+        "label": 0
+    },
+    {
+        "subject": "Displeasure with Product Quality",
+        "body": """
+        <html>
+        <head><title>Displeasure with Product Quality</title></head>
+        <body>
+            <p>Dear Customer Service,</p>
+            <p>I am very disappointed with the quality of the product I received. It does not meet the standards promised and I expect a resolution immediately.</p>
+            <p>Best,<br>Disgruntled Buyer</p>
+        </body>
+        </html>
+        """,
+        "label": 0
+    },
+    {
+        "subject": "Re: Repeated Technical Issues",
+        "body": """
+        <html>
+        <head><title>Repeated Technical Issues</title></head>
+        <body>
+            <p>Hi Support Team,</p>
+            <p>This is the fourth time I am reporting the same technical issue. It needs to be fixed once and for all, as this is affecting my productivity severely.</p>
+            <p>Best regards,<br>Annoyed User</p>
+        </body>
+        </html>
+        """,
+        "label": 0
+    },
+    {
+        "subject": "Notification of Policy Violation",
+        "body": """
+        <html>
+        <head><title>Policy Violation</title></head>
+        <body>
+            <p>Dear Employee,</p>
+            <p>This email serves as a formal notification of your violation of company policy. Such behavior will not be tolerated, and further action will be taken if necessary.</p>
+            <p>Best regards,<br>HR Department</p>
+        </body>
+        </html>
+        """,
+        "label": 0
+    },
+    {
+        "subject": "Complaint About Service",
+        "body": """
+        <html>
+        <head><title>Complaint About Service</title></head>
+        <body>
+            <p>Dear Customer Service,</p>
+            <p>The service I received recently was far below my expectations. I am very dissatisfied and expect you to address these concerns urgently.</p>
+            <p>Regards,<br>Unsatisfied Customer</p>
+        </body>
+        </html>
+        """,
+        "label": 0
+    },
+    {
+        "subject": "Re: Dispute Resolution Needed",
+        "body": """
+        <html>
+        <head><title>Dispute Resolution</title></head>
+        <body>
+            <p>Dear Support,</p>
+            <p>I am writing to express my frustration with the ongoing dispute. This needs to be resolved immediately as it is causing unnecessary stress and inconvenience.</p>
+            <p>Thank you,<br>Stressed Client</p>
+        </body>
+        </html>
+        """,
+        "label": 0
+    },
+    {
+        "subject": "Your Weekly Tech News",
+        "body": """
+        <html>
+        <head><title>Weekly Tech News</title></head>
+        <body>
+            <p>Welcome to your weekly tech update!</p>
+            <p>This week, we cover the latest advancements in AI and machine learning.</p>
+            <p>Stay tuned for more updates!</p>
+            <p>Best regards,<br>The Tech Team</p>
+        </body>
+        </html>
+        """,
+        "label": 0
+    },
+    {
+        "subject": "Dinner Invitation",
+        "body": """
+        <html>
+        <head><title>Dinner Invitation</title></head>
+        <body>
+            <p>Hey,</p>
+            <p>Are you free for dinner on Friday? Let's catch up!</p>
+            <p>Let me know your thoughts.</p>
+            <p>Best,<br>Jane</p>
+        </body>
+        </html>
+        """,
+        "label": 0
+    },
+    {
+        "subject": "Account Activity Alert",
+        "body": """
+        <html>
+        <head><title>Account Activity Alert</title></head>
+        <body>
+            <p>Dear user,</p>
+            <p>We noticed some unusual activity on your account. Please review your recent transactions.</p>
+            <p>Thank you,<br>The Security Team</p>
+        </body>
+        </html>
+        """,
+        "label": 0
+    },
+    {
+        "subject": "Team Building Event",
+        "body": """
+        <html>
+        <head><title>Team Building Event</title></head>
+        <body>
+            <p>Hi team,</p>
+            <p>We are excited to announce a team-building event next Friday. Please let us know if you can attend.</p>
+            <p>Best regards,<br>HR Department</p>
+        </body>
+        </html>
+        """,
+        "label": 0
+    },
+    {
+        "subject": "Weekly Status Report",
+        "body": """
+        <html>
+        <head><title>Weekly Status Report</title></head>
+        <body>
+            <p>Dear team,</p>
+            <p>Please find attached the weekly status report for your review.</p>
+            <p>Best,<br>Project Lead</p>
+        </body>
+        </html>
+        """,
+        "label": 0
+    },
+    {
+        "subject": "Project Kickoff Meeting",
+        "body": """
+        <html>
+        <head><title>Project Kickoff Meeting</title></head>
+        <body>
+            <p>Hi team,</p>
+            <p>We will be having our project kickoff meeting this Wednesday at 3 PM. Please come prepared with any initial thoughts or questions.</p>
+            <p>Best,<br>Project Manager</p>
+        </body>
+        </html>
+        """,
+        "label": 0
+    },
+    {
+        "subject": "Password Change Confirmation",
+        "body": """
+        <html>
+        <head><title>Password Change Confirmation</title></head>
+        <body>
+            <p>Dear user,</p>
+            <p>Your password has been successfully changed. If you did not make this change, please contact support immediately.</p>
+            <p>Thank you,<br>Support Team</p>
+        </body>
+        </html>
+        """,
+        "label": 0
+    },
+    {
+        "subject": "Monthly Newsletter",
+        "body": """
+        <html>
+        <head><title>Monthly Newsletter</title></head>
+        <body>
+            <p>Hello,</p>
+            <p>Welcome to our monthly newsletter! This edition includes updates on our latest products and upcoming events.</p>
+            <p>Best,<br>The Newsletter Team</p>
+        </body>
+        </html>
+        """,
+        "label": 0
+    },
+    {
+        "subject": "Service Interruption Notice",
+        "body": """
+        <html>
+        <head><title>Service Interruption Notice</title></head>
+        <body>
+            <p>Dear customer,</p>
+            <p>We would like to inform you of a planned service interruption on Saturday from 2 AM to 4 AM for maintenance purposes. We apologize for any inconvenience this may cause.</p>
+            <p>Best regards,<br>Service Team</p>
+        </body>
+        </html>
+        """,
+        "label": 0
+    },
+    {
+        "subject": "Feedback on Recent Purchase",
+        "body": """
+        <html>
+        <head><title>Feedback Request</title></head>
+        <body>
+            <p>Dear customer,</p>
+            <p>We hope you are enjoying your recent purchase. We would love to hear your feedback. Please take a moment to complete our short survey.</p>
+            <p>Thank you,<br>Customer Support</p>
+        </body>
+        </html>
+        """,
+        "label": 0
+    },
+    {
+        "subject": "Policy Update Notification",
+        "body": """
+        <html>
+        <head><title>Policy Update Notification</title></head>
+        <body>
+            <p>Dear user,</p>
+            <p>We have updated our privacy policy. Please take a moment to review the changes.</p>
+            <p>Best regards,<br>Compliance Team</p>
+        </body>
+        </html>
+        """,
+        "label": 0
+    },
+    {
+        "subject": "Reminder: Upcoming Appointment",
+        "body": """
+        <html>
+        <head><title>Appointment Reminder</title></head>
+        <body>
+            <p>Hi,</p>
+            <p>This is a reminder for your upcoming appointment on Thursday at 3 PM.</p>
+            <p>Best regards,<br>Appointment Desk</p>
+        </body>
+        </html>
+        """,
+        "label": 0
+    },
+    {
+        "subject": "Invitation to Beta Test",
+        "body": """
+        <html>
+        <head><title>Beta Test Invitation</title></head>
+        <body>
+            <p>Hi there,</p>
+            <p>We are excited to invite you to participate in the beta testing of our new app. Your feedback will be invaluable to us.</p>
+            <p>Best,<br>The Development Team</p>
+        </body>
+        </html>
+        """,
+        "label": 0
+    },
+    {
+        "subject": "Payment Confirmation",
+        "body": """
+        <html>
+        <head><title>Payment Confirmation</title></head>
+        <body>
+            <p>Dear customer,</p>
+            <p>We have received your payment for invoice #789456. Thank you for your prompt payment.</p>
+            <p>Best regards,<br>Billing Team</p>
+        </body>
+        </html>
+        """,
+        "label": 0
+    },
+    {
+        "subject": "Congratulations on Your Promotion!",
+        "body": """
+        <html>
+        <head><title>Promotion Congratulations</title></head>
+        <body>
+            <p>Dear [Employee],</p>
+            <p>Congratulations on your promotion! We are thrilled to see your hard work and dedication rewarded.</p>
+            <p>Best wishes,<br>HR Department</p>
+        </body>
+        </html>
+        """,
+        "label": 0
+    },
+    {
+        "subject": "Upcoming Holiday Schedule",
+        "body": """
+        <html>
+        <head><title>Holiday Schedule</title></head>
+        <body>
+            <p>Hi everyone,</p>
+            <p>Here is the upcoming holiday schedule. Please make sure to mark your calendars accordingly.</p>
+            <p>Best,<br>Management</p>
+        </body>
+        </html>
+        """,
+        "label": 0
+    },
+    {
+        "subject": "Training Session Invitation",
+        "body": """
+        <html>
+        <head><title>Training Session</title></head>
+        <body>
+            <p>Hi team,</p>
+            <p>You are invited to a training session on new software tools next Monday at 2 PM.</p>
+            <p>Best regards,<br>Training Coordinator</p>
+        </body>
+        </html>
+        """,
+        "label": 0
+    }
+    # Add more email entries here
+]
+
+# Convert to DataFrame
+df = pd.DataFrame(emails)
+
+# Save to CSV
+df.to_csv('non_phishing_emails_dataset.csv', index=False)
+print("Non-phishing dataset created and saved.")
