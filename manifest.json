@@ -2,12 +2,16 @@
   "manifest_version": 3,
   "name": "Phishing Detector",
   "version": "1.0",
-  "permissions": [
-    "storage"
-  ],
-  "host_permissions": [
-    "https://api.openai.com/*"
-  ],
+  "permissions": ["storage"],
+  "host_permissions": ["<all_urls>"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "Images/icon16.png",
+      "48": "Images/icon48.png",
+      "128": "Images/icon128.png"
+    }
+  },
   "background": {
     "service_worker": "background.js"
   },
@@ -17,9 +21,6 @@
       "js": ["content.js"]
     }
   ],
-  "action": {
-    "default_popup": "popup.html",
-    "default_icon": "images/icon.png"
-  },
-  "options_page": "options.html"
+  "options_page": "options.html",
+  "web_accessible_resources": []
 }
