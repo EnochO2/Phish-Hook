@@ -4,10 +4,12 @@ from openai import OpenAI
 import os
 import logging
 from dotenv import load_dotenv
+import json
 app = Flask(__name__)
 
 # Ensure the CORS setup allows the required methods and headers
-CORS(app, resources={r"/analyze": {"origins": "chrome-extension://<extension-id>"}}, supports_credentials=True)
+# CORS(app, resources={r"/analyze": {"origins": "chrome-extension://<extension-id>"}}, supports_credentials=True)
+CORS(app)
 
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -34,7 +36,7 @@ def analyze_email():
 
         response = client.chat.completions.create(
             messages=[
-                {"role": "system", "content": "You are a skilled assistant in identifying phishing emails."},
+                {"role": "system", "content": "You are an email phishing detector, use the email content to determine if this email is an attempt at phishing. Give it a risk score enum out of 3 (low, medium, high) and a one sentence summary of the email's risky content. Return the result as a json with 2 keys; score[string] and summary[string]"},
                 {"role": "user", "content": f"Analyze this email for phishing signs: {content}"}
                 ],
             model="gpt-3.5-turbo",
@@ -46,7 +48,7 @@ def analyze_email():
             gpt_response = response.to_dict()['choices'][0]['message']['content']
             is_phishing = "phishing" in gpt_response.lower()
             logging.info(f"Email analysis result: {'Phishing' if is_phishing else 'Non-Phishing'}")
-            return jsonify({'risk': 'high' if is_phishing else 'low'})
+            return jsonify(json.loads(gpt_response))
 
         except (IndexError, KeyError) as e:
             logging.error("Unexpected response from OpenAI:", response)

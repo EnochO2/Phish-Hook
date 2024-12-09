@@ -2,7 +2,12 @@
   "manifest_version": 3,
   "name": "Phishing Detector",
   "version": "1.0",
-  "permissions": ["storage"],
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "http://localhost:5000/*"
+  ],
   "host_permissions": ["<all_urls>"],
   "action": {
     "default_popup": "popup.html",
@@ -18,9 +23,14 @@
   "content_scripts": [
     {
       "matches": ["*://mail.google.com/*"],
-      "js": ["content.js"]
+      "js": ["content.js","libs/axios.min.js"]
     }
   ],
   "options_page": "options.html",
-  "web_accessible_resources": []
+  "web_accessible_resources": [
+    {
+      "resources": ["axios.min.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }
