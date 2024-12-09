@@ -1,16 +1,15 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const toggleSwitch = document.getElementById('toggleSwitch');
-    
-    // Load the current state
-    chrome.storage.sync.get('isDetectionEnabled', function(data) {
-        toggleSwitch.checked = data.isDetectionEnabled || false; // Default to off
-    });
+console.log(`THis is DATA ${DATA}`)
+const refreshData = () => {
+    console.log(`REFRESHING!! This is DATA now ${DATA}`)
+    const scoreElement = document.querySelector("#score")
+    const summaryElemenet = document.querySelector("#summary")
 
-    // Listen for toggle changes
-    toggleSwitch.addEventListener('change', function() {
-        const isChecked = toggleSwitch.checked;
-        chrome.storage.sync.set({ isDetectionEnabled: isChecked }, function() {
-            console.log('Phishing detection is now', isChecked ? 'enabled' : 'disabled');
-        });
-    });
-});
+    scoreElement.innerHTML = DATA.score
+    summaryElemenet.innerHTML = DATA.summary
+}
+
+const refreshButton = document.querySelector("#refresh")
+
+refreshButton.addEventListener("click", refreshData)
+
+s

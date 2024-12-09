@@ -1,104 +1,111 @@
-console.log("Starting content script.");
-
-// Your model parameters (previously extracted and inserted here)
-const modelData = {
-    weights: [/* Insert your weights from model_data.json */],
-    intercept: [/* Insert intercept here */],
-    features: [/* Insert your features here */]
+console.log("Starting content.js");
+let DATA = {
+    score: "No Score receiver",
+    summary: "No summary yet"
 };
 
-// Existing functions...
-function vectorize(content) {
-    const words = content.toLowerCase().split(/\s+/);
-    const featureVector = new Array(modelData.features.length).fill(0);
-    words.forEach(word => {
-        const index = modelData.features.indexOf(word);
-        if (index !== -1) {
-            featureVector[index] += 1;
-        }
-    });
-    return featureVector;
-}
-
-function predictPhishing(content) {
-    const featureVector = vectorize(content);
-    let score = modelData.intercept;
-    for (let i = 0; i < featureVector.length; i++) {
-        score += featureVector[i] * modelData.weights[i];
+function getEmailSubject() {
+    let subjectElement = document.querySelector('h2.hP');
+    if (subjectElement) {
+        console.log("Email subject found:", subjectElement.innerText.trim());
+        return subjectElement.innerText.trim();
+    } else {
+        console.warn("Email subject not found.");
+        return 'Unknown Subject';
     }
-    const probabilityOfPhishing = 1 / (1 + Math.exp(-score));
-    return probabilityOfPhishing > 0.5 ? 'high' : 'low';
 }
 
-// The enhanced detection function
-function enhancedDetection(subject, body) {
-    const suspiciousWords = ["urgent", "immediate", "click here", "secure your account"];
-    let suspicionFlag = false;
+const observer = new MutationObserver((mutationsList, observer) => {
+    console.log("Mutation observed.");
+    let emailSubject = getEmailSubject();
+    if (emailSubject !== 'Unknown Subject') {
+        observer.disconnect(); // Disconnect observer after first detection
+        console.log("Observer disconnected.");
+        findEmailContent(emailSubject);
+    }
+});
 
-    suspiciousWords.forEach(word => {
-        if (subject.toLowerCase().includes(word) || body.toLowerCase().includes(word)) {
-            suspicionFlag = true;
-        }
-    });
+const config = { childList: true, subtree: true };
+observer.observe(document.body, config);
+console.log("MutationObserver started.");
 
-    const modelRisk = predictPhishing(`${subject} ${body}`);
-    const combinedRisk = suspicionFlag || modelRisk === 'high';
 
-    return combinedRisk ? "Phishing" : "Non-Phishing";
+const checkForEmail = () => {
+    let emailSubject = getEmailSubject();
+    if (emailSubject !== 'Unknown Subject') {
+        findEmailContent(emailSubject);
+    }
 }
 
-// Update this function to use enhancedDetection
-function analyzeContent(subject, body) {
-    const risk = enhancedDetection(subject, body);
-    displayResult(subject, risk);
+function findEmailContent(subject) {
+
+    let emailBody = document.querySelector("#\\:1s > div.adn.ads > div.gs > div:nth-child(3)");
+
+    let emailContent = emailBody.textContent
+
+    console.log(`SUBJECT:  + ${subject}`)
+
+    console.log(`EMAIL CONTENT DISPLAYED:\n${emailContent}`)
+
+    DATA = getFlaskResponse(emailContent)
+
 }
 
-function displayResult(subject, risk) {
+const getFlaskResponse = async (emailContent) => {
+    console.log("GETTING FLASK RESPONSE IN content.js")
+    try {
+        const response = await axios.post('http://localhost:5000/analyze', {
+            emailContent: emailContent
+        }, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        console.log(response.data)
+        return response.data
+    } catch (error) {
+        console.error('Error:', error);
+        return { error: 'Failed to analyze email' }
+    }
+}
+
+function displayResult(subject, results) {
+    console.log("Displaying result in the Gmail interface.");
     let analysisContainer = document.createElement('div');
     analysisContainer.style.border = "2px solid #FF0000";
     analysisContainer.style.padding = "10px";
     analysisContainer.style.margin = "10px";
-    analysisContainer.style.backgroundColor = risk === 'Phishing' ? "#FFDDDD" : "#DDFFDD";
-    analysisContainer.textContent = `Detected Subject: ${subject}\nClassification: ${risk}`;
-    
-    const targetNode = document.querySelector('div[role="main"]');
+
+    switch (results.score) {
+        case "low":
+            analysisContainer.style.backgroundColor = "#00FF00"
+            break;
+        case "medium":
+            analysisContainer.style.backgroundColor = "#FFFF00"
+            break;
+        case "high":
+            analysisContainer.style.backgroundColor = "#FF0000"
+            break;
+    }
+
+
+    analysisContainer.textContent = `Detected Subject: ${subject}\nClassification: ${results.score}\nSummary: ${results.summary}`;
+
+    let targetNode = document.querySelector('div[role="main"]');
     if (targetNode) {
-        targetNode.prepend(analysisContainer);
+        targetNode.appendChild(analysisContainer);
+        console.log("Analysis container appended to the main container.");
     } else {
-        document.body.prepend(analysisContainer);
+        document.body.appendChild(analysisContainer);
+        console.log("Analysis container appended to the body.");
     }
-    
-    if (risk === 'Phishing') {
-        alert("Warning: This email has been classified as Phishing!");
+
+    if (results.score === "high") {
+        triggerAlert(results);
     }
 }
 
-// Observer setup remains the same...
-const observer = new MutationObserver(() => {
-    analyzeIfReady();
-});
-const config = { childList: true, subtree: true };
-observer.observe(document.body, config);
-
-function getEmailSubject() {
-    const subjectElement = document.querySelector('h2.hP') || document.querySelector('.some-other-class');
-    return subjectElement ? subjectElement.innerText.trim() : null;
-}
-
-function getEmailBody() {
-    const bodyElements = document.querySelectorAll('div[role="textbox"], div[role="listitem"]');
-    let bodyContent = '';
-    bodyElements.forEach(element => {
-        bodyContent += element.innerText.trim() + ' ';
-    });
-    return bodyContent.trim().length === 0 ? null : bodyContent.trim();
-}
-
-function analyzeIfReady() {
-    const emailSubject = getEmailSubject();
-    const emailBody = getEmailBody();
-    if (emailSubject && emailBody) {
-        observer.disconnect(); // Prevent redundant execution
-        analyzeContent(emailSubject, emailBody);
-    }
+function triggerAlert(results) {
+    console.log("Triggering alert for phishing email.");
+    alert(`Warning: This email has been classified as Phishing!\n\nTotal Score: ${results.score}`);
 }
